@@ -53,39 +53,40 @@ public class FindFileVisitor extends SimpleFileVisitor<Path> {
             shifts.put(patternChars[i], patternChars.length - i - 1);
         }
     }
-//
-//    private int[] getT() {
-//        int[] t = new int[patternChars.length + 1];
-//        int i = 0;
-//        int j = t[0] = -1;
-//        while (i < patternChars.length) {
-//            while (j > -1 && patternChars[i] != patternChars[j]) {
-//                j = t[j];
-//            }
-//            ++i;
-//            ++j;
-//            if (i < patternChars.length && patternChars[i] == patternChars[j]) {
-//                t[i] = t[j];
-//            } else {
-//                t[i] = j;
-//            }
-//        }
-//        return t;
-//    }
-//
-//    private int getL() {
-//        int l = 1;
-//        while (l < patternChars.length && patternChars[l - 1] == patternChars[l]) {
-//            ++l;
-//        }
-//        if (l == patternChars.length) l = 0;
-//        return l;
-//    }
 
-    private int containsPattern(File file) {
+    private int[] getT() {
+        int[] t = new int[patternChars.length + 1];
+        int i = 0;
+        int j = t[0] = -1;
+        while (i < patternChars.length) {
+            while (j > -1 && patternChars[i] != patternChars[j]) {
+                j = t[j];
+            }
+            ++i;
+            ++j;
+            if (i < patternChars.length && patternChars[i] == patternChars[j]) {
+                t[i] = t[j];
+            } else {
+                t[i] = j;
+            }
+        }
+        return t;
+    }
+
+    private int getL() {
+        int l = 1;
+        while (l < patternChars.length && patternChars[l - 1] == patternChars[l]) {
+            ++l;
+        }
+        if (l == patternChars.length) l = 0;
+        return l;
+    }
+
+    private long containsPattern(File file) {
         buffer.clear();
         String f = file.getAbsolutePath();
-        int numberChars, pos = 0;
+        int numberChars;
+        long pos = 0;
         try (FileReader input = new FileReader(file)) {
             while (true) {
                 numberChars = input.read(buffer);
@@ -95,13 +96,11 @@ public class FindFileVisitor extends SimpleFileVisitor<Path> {
                 buffer.get(part);
                 int localPos = contains(part);
                 if (localPos > 0) {
-                    System.out.println("Found in " + (pos + localPos));
                     return pos + localPos;
                 }
                 if (buffer.position() == BIG_BUF_SIZE) {
                     int offset = BIG_BUF_SIZE - patternChars.length;
                     pos += offset;
-                    System.out.println("New start position is " + pos);
                     buffer.position(offset);
                     buffer.get(tail);
                     buffer.clear();
@@ -175,7 +174,7 @@ public class FindFileVisitor extends SimpleFileVisitor<Path> {
             File rf = file.toFile();
             if (rf.isFile()) {
                 if (isContent) {
-                    int pos = containsPattern(rf);
+                    long pos = containsPattern(rf);
                     if (pos > -1) {
                         files.add(file.toAbsolutePath().toString() + ": " + pos);
                     }
